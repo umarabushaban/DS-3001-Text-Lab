@@ -1,5 +1,5 @@
 ---
-title: "Text_Mining_Markdown"
+title: "An Analysis of Climate Sentiment Across the USA"
 author: "Xander Atalay"
 date: "10/20/2021"
 output:
@@ -17,3 +17,134 @@ editor_options:
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, cache = FALSE)
 ```
 
+```{r Libraries, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(ggwordcloud)
+library(gutenbergr)
+library(textdata)
+```
+
+## Introduction:
+
+### Our group is taking a look at six different regions in the continental United States: Northeast, Midwest ... Our goal is to analyze the sentiment surrounding climate change in those regions by using text mining algorithms on news sources in those regions. {.unlisted .unnumbered}
+
+## Initial Exploration in Each Region: {.tabset}
+
+### Boston Magazine:
+
+```{r Northeast, echo = FALSE}
+# We start by loading in the data, which is just a txt file containing all of the text from each journal.
+BostonMagazineClimate <- tibble(text = read_lines('BostonMagazineClimate.txt'))
+# 29 articles from the Boston Magazine were used for this analysis, amounting to approximately 107,371 words.
+
+# Seperating out the words into individual rows.
+BM_Words <-  BostonMagazineClimate %>% unnest_tokens(word, text)
+# removing any stop words.
+BM_Words_SW <- BM_Words %>% anti_join(stop_words)
+# After removing the stop words, we can see that the total word count has halved.
+# Next, we count the frequency of each word in the corpus.
+BM_Count <- BM_Words_SW %>% count(word, sort=TRUE)
+# We can take a look at this table to get a sense of the most common words in this article. Unsuprisingly, it is very... Boston.
+
+# Next, we'll start with the sentiment analysis. We use three different sentiment data sets: affin, nrc, and bing.
+BMSentiment_affin <- BM_Words %>%
+  inner_join(get_sentiments("afinn"))
+
+BMSentiment_nrc <- BM_Words %>%
+  inner_join(get_sentiments("nrc"))
+
+BMSentiment_bing <- BM_Words %>%
+  inner_join(get_sentiments("bing"))
+
+# Taking a look at the bing sentiment analysis, which just gives us a sense of the ratio between positive and negative words.
+cat("Bing Sentiment Analysis:")
+table(BMSentiment_bing$sentiment)
+# We can compare the ratios of positive to negative words in different regions.
+cat(paste("Positive Word to Negative Word Ratio:", 
+          as.character(round((3266/2114),digits = 2))))
+
+
+# The nrc sentiment analysis is more complex, and ranks words based on different characteristics beyond positive and negative.
+cat("NRC Sentiment Analysis")
+table(BMSentiment_nrc$sentiment)
+
+# Finally, we can look at the affin sentiment (which ranks how positive a word is on a scale of -5 to 5) and determine the frequency of more positive words.
+cat("Affin Sentiment Analysis")
+(ggplot(data = BMSentiment_affin, 
+       aes(x=value))+
+  geom_histogram()+
+  ggtitle("Boston Magazine Climate Sentiment Range")+
+  theme_minimal())
+
+```
+
+
+
+### Chicago Daily Herald
+```{r Midwest, echo = FALSE}
+# Now we repeat those steps with different regions, next up we're doing the midwest, using the Chicago Daily Herald as our Source.
+
+# Loading in the data:
+ChicagoHeraldClimate <- tibble(text = read_lines('ChicagoHeraldClimate.txt'))
+# 80 articles from the Chicago Herald were used for this analysis, amounting to approximately 68,923 words.
+
+# Seperating out the words into individual rows.
+CH_Words <-  ChicagoHeraldClimate %>% unnest_tokens(word, text)
+# removing any stop words.
+CH_Words_SW <- CH_Words %>% anti_join(stop_words)
+# After removing the stop words, we can see that the total word count has almost exactly halved.
+
+# Next, we count the frequency of each word in the corpus.
+CH_Count <- CH_Words_SW %>% count(word, sort=TRUE)
+# We can take a look at this table to get a sense of the most common words in this article. We see climate and change at the top two, indicating that we have a good text selection for this analysis.
+
+# Sentiment Analysis
+CHSentiment_affin <- CH_Words %>%
+  inner_join(get_sentiments("afinn"))
+
+CHSentiment_nrc <- CH_Words %>%
+  inner_join(get_sentiments("nrc"))
+
+CHSentiment_bing <- CH_Words %>%
+  inner_join(get_sentiments("bing"))
+
+# Taking a look at the bing sentiment analysis, which just gives us a sense of the ratio between positive and negative words.
+cat("Bing Sentiment Analysis:")
+table(CHSentiment_bing$sentiment)
+# We can compare the ratios of positive to negative words in different regions.
+cat(paste("Positive Word to Negative Word Ratio:", 
+          as.character(round((1661/1577),digits = 2))))
+# We can see this this is a lower ratio, meaning that the conversation surrounding climate change has a more negative sentiment in the Chicago Daily Herald.
+
+# The nrc sentiment analysis is more complex, and ranks words based on different characteristics beyond positive and negative.
+cat("NRC Sentiment Analysis")
+table(CHSentiment_nrc$sentiment)
+
+# Finally, we can look at the affin sentiment (which ranks how positive a word is on a scale of -5 to 5) and determine the frequency of more positive words.
+cat("Affin Sentiment Analysis")
+(ggplot(data = CHSentiment_affin, 
+       aes(x=value))+
+  geom_histogram()+
+  ggtitle("Chicago Daily Herald Climate Sentiment Range")+
+  theme_minimal())
+
+```
+
+## Summarized Differences Between Climate Sentiment in Each Region: {.tabset}
+
+```{r Comparison Plots}
+# Setting Up a Stacked Bar Chart
+Source <- c(rep("Boston" , 2) , rep("Chicago" , 2))
+Sentiment <- c("Positive" , "Negative")
+Words <- c(3266,2114,1661,1577)
+Country <- data.frame(Source,Sentiment,Words)
+
+ggplot(Country, aes(fill=Sentiment, y=Words, x=Source)) + 
+    geom_bar(position="stack", stat="identity")
+
+TextSource <- c("Boston", "Chicago")
+PositiveWordRatio <- c(1.54,1.05)
+BingRatios <- data.frame(TextSource,PositiveWordRatio)
+BingRatios
+```
