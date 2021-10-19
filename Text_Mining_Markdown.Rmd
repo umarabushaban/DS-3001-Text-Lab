@@ -1,6 +1,6 @@
 ---
 title: "An Analysis of Climate Sentiment Across the USA"
-author: "Xander Atalay"
+author: "Xander Atalay, Zoe Pham, Umar Abushaban"
 date: "10/20/2021"
 output:
   html_document:
@@ -266,4 +266,147 @@ BingRatios
   geom_bar(stat = "identity"))
 ```
 
+### The Los Angeles Times:
+
+```{r West, echo = FALSE}
+# We load in a txt file containing all of the text from The LA Times as a tibble.
+LATimesClimate <- tibble(text = read_lines('LA_Times_Climate.txt'))
+
+# Separate the words into individual rows.
+LA_Words <-  LATimesClimate %>% unnest_tokens(word, text)
+# Removing any stop words.
+LA_Words_SW <- LA_Words %>% anti_join(stop_words)
+# Counting the frequency of each word in the corpus (entire body of the LA Times articles in the .txt file)
+LA_Count <- LA_Words_SW %>% count(word, sort=TRUE)
+
+# Sentiment analysis. We use three different sentiment data sets: affin, nrc, and bing.
+LASentiment_affin <- LA_Words %>%
+  inner_join(get_sentiments("afinn"))
+
+LASentiment_nrc <- LA_Words %>%
+  inner_join(get_sentiments("nrc"))
+
+LASentiment_bing <- LA_Words %>%
+  inner_join(get_sentiments("bing"))
+
+# Taking a look at the bing sentiment analysis, which just gives us a sense of the ratio between positive and negative words.
+cat("Bing Sentiment Analysis:")
+table(LASentiment_bing$sentiment)
+# We can compare the ratios of positive to negative words in different regions.
+cat(paste("Positive Word to Negative Word Ratio:", 
+          as.character(round((1082/763 ),digits = 2))))
+
+
+# The nrc sentiment analysis is more complex, and ranks words based on different characteristics beyond positive and negative.
+cat("NRC Sentiment Analysis")
+table(LASentiment_nrc$sentiment)
+ggplot(LASentiment_nrc, aes(x = sentiment)) + geom_bar()
+
+# Finally, we can look at the affin sentiment (which ranks how positive a word is on a scale of -5 to 5) and determine the frequency of more positive words.
+cat("Affin Sentiment Analysis")
+(ggplot(data = LASentiment_affin, 
+       aes(x=value))+
+  geom_bar()+
+  ggtitle("The Los Angeles Times Sentiment Range")+
+  theme_minimal())
+
+# Word Cloud
+set.seed(42)
+ggplot(LA_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_outside = TRUE) + scale_size(range = c(2,12)) + theme_minimal()
+```
+
+### The Seattle Times
+```{r Northwest, echo = FALSE}
+
+
+
+
+# Loading in the data:
+SeattleTimesClimate <- tibble(text = read_lines('Seattle_Times_Climate.txt'))
+
+# Seperating out the words into individual rows.
+Seattle_Words <-  SeattleTimesClimate %>% unnest_tokens(word, text)
+# removing any stop words.
+Seattle_Words_SW <- Seattle_Words %>% anti_join(stop_words)
+# After removing the stop words, we can see that the total word count has almost exactly halved.
+
+# Next, we count the frequency of each word in the corpus.
+Seattle_Count <- Seattle_Words_SW %>% count(word, sort=TRUE)
+
+
+# Sentiment Analysis
+SeattleSentiment_affin <- Seattle_Words %>%
+  inner_join(get_sentiments("afinn"))
+
+SeattleSentiment_nrc <- Seattle_Words %>%
+  inner_join(get_sentiments("nrc"))
+
+SeattleSentiment_bing <- Seattle_Words %>%
+  inner_join(get_sentiments("bing"))
+
+# Taking a look at the bing sentiment analysis, which just gives us a sense of the ratio between positive and negative words.
+cat("Bing Sentiment Analysis:")
+table(SeattleSentiment_bing$sentiment)
+# We can compare the ratios of positive to negative words in different regions.
+cat(paste("Positive Word to Negative Word Ratio:", 
+          as.character(round((577/547),digits = 2))))
+# The positive to negative word ratio is higher in The Seattle Times compared to the Los Angeles Times, so the conversation surrounding climate change has a more positive sentiment in this region.
+
+# The nrc sentiment analysis ranks words based on different characteristics beyond positive and negative.
+cat("NRC Sentiment Analysis")
+ggplot(SeattleSentiment_nrc, aes(x = sentiment)) + geom_bar()
+cat("Affin Sentiment Analysis")
+(ggplot(data = SeattleSentiment_affin, 
+       aes(x=value))+
+  geom_bar()+
+  ggtitle("The Seattle Times Climate Sentiment Range")+
+  theme_minimal())
+
+# Word Cloud
+set.seed(42)
+ggplot(Seattle_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_outside = TRUE) + scale_size(range = c(2,12)) + theme_minimal()
+
+```
+
 ## TF-IDF:
+```{r}
+# Transposing data alongside each other to compare vs on top of each other 
+data_prep <- function(x,y,z){
+  i <- as_tibble(t(x))
+  ii <- unite(i,"text",y:z,remove = TRUE,sep = " ")}
+BM_bag <- data_prep(BM_Words, 'V1', 'V107371') # 51873
+CH_bag <- data_prep(CH_Words, 'V1','V68923')
+TBT_bag <- data_prep(TBT_Words, 'V1','V18946')
+SFNM_bag <- data_prep(SFNM_Words, 'V1', 'V14141')
+LA_bag <- data_prep(LA_Words, 'V1', 'V35993')
+Seattle_bag <- data_prep(Seattle_Words, 'V1', 'V12650')
+
+regions <- c("Northeast","Midwest","Southwest", "Southeast", "West", "Northwest")
+
+tf_idf_text <- tibble(regions,text=t(tibble(BM_bag,CH_bag, TBT_bag, SFNM_bag,.name_repair = "universal")))
+
+View(tf_idf_text)
+
+word_count <- tf_idf_text %>%
+  unnest_tokens(word, text) %>%
+  count(regions, word, sort = TRUE)
+
+total_words <- word_count %>% 
+  group_by(regions) %>% 
+  summarize(total = sum(n))
+
+region_words <- left_join(word_count, total_words)
+
+View(region_words)
+
+region_words <- region_words %>%
+  bind_tf_idf(word, regions, n)
+
+#usually look at the top 25ish words and see if there are pattern differences
+
+# term frequency - inverse document frequency tf-idf. Here we are going to treat each of our speeches as a document in a corpus and explore the relative importance of words to these speeches as compared to the overall corpus. 
+
+#ratio of how often a term shows up in the whole corpus vs indiv doc
+
+```
+
