@@ -130,7 +130,7 @@ ggplot(TBT_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_
 
 ```
 
-## Summarized Differences Between Climate Sentiment in Each Region: {.tabset}
+## Summarized Differences Between Climate Sentiment in Each Region: 
 
 ```{r Comparison Plots}
 # Setting Up a Stacked Bar Chart

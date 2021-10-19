@@ -54,5 +54,8 @@ table(CHSentiment_nrc$sentiment)
     ggtitle("Boston Magazine Climate Sentiment Range")+
     theme_minimal())
 
+# term frequency - inverse document frequency tf-idf. Here we are going to treat
+# each of our speeches as a document in a corpus and explore the relative 
+# importance of words to these speeches as compared to the overall corpus. 
 
 

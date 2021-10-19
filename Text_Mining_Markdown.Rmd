@@ -68,6 +68,9 @@ cat(paste("Positive Word to Negative Word Ratio:",
 # The nrc sentiment analysis is more complex, and ranks words based on different characteristics beyond positive and negative.
 cat("NRC Sentiment Analysis")
 table(BMSentiment_nrc$sentiment)
+# Creating a histogram of those words
+(ggplot(BMSentiment_nrc, aes(x = sentiment)) + 
+  geom_bar())
 
 # Finally, we can look at the affin sentiment (which ranks how positive a word is on a scale of -5 to 5) and determine the frequency of more positive words.
 cat("Affin Sentiment Analysis")
@@ -77,11 +80,13 @@ cat("Affin Sentiment Analysis")
   ggtitle("Boston Magazine Climate Sentiment Range")+
   theme_minimal())
 
+set.seed(42)
+ggplot(BM_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_outside = TRUE) + scale_size(range = c(2,12)) + theme_minimal()
 ```
 
 
 
-### Chicago Daily Herald
+### Chicago Daily Herald:
 ```{r Midwest, echo = FALSE}
 # Now we repeat those steps with different regions, next up we're doing the midwest, using the Chicago Daily Herald as our Source.
 
@@ -120,6 +125,9 @@ cat(paste("Positive Word to Negative Word Ratio:",
 # The nrc sentiment analysis is more complex, and ranks words based on different characteristics beyond positive and negative.
 cat("NRC Sentiment Analysis")
 table(CHSentiment_nrc$sentiment)
+# Creating histogram
+(ggplot(CHSentiment_nrc, aes(x = sentiment)) + 
+  geom_bar())
 
 # Finally, we can look at the affin sentiment (which ranks how positive a word is on a scale of -5 to 5) and determine the frequency of more positive words.
 cat("Affin Sentiment Analysis")
@@ -129,22 +137,133 @@ cat("Affin Sentiment Analysis")
   ggtitle("Chicago Daily Herald Climate Sentiment Range")+
   theme_minimal())
 
+set.seed(42)
+ggplot(CH_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_outside = TRUE) + scale_size(range = c(2,12)) + theme_minimal()
 ```
 
-## Summarized Differences Between Climate Sentiment in Each Region: {.tabset}
+### The Santa Fe New Mexican:
+
+```{r Southwest, echo = FALSE}
+# We load in a txt file containing all of the text from The Santa Fe New Mexican as a tibble.
+SantaFeNewMexicanClimate <- tibble(text = read_lines('The Santa Fe New Mexican.txt'))
+
+
+# Separate the words into individual rows.
+SFNM_Words <-  SantaFeNewMexicanClimate %>% unnest_tokens(word, text)
+# Removing any stop words.
+SFNM_Words_SW <- SFNM_Words %>% anti_join(stop_words)
+# Counting the frequency of each word in the corpus (entire body of Santa Fe New Mexican articles I selected)
+SFNM_Count <- SFNM_Words_SW %>% count(word, sort=TRUE)
+
+# Sentiment analysis. We use three different sentiment data sets: affin, nrc, and bing.
+SFNMSentiment_affin <- SFNM_Words %>%
+  inner_join(get_sentiments("afinn"))
+
+SFNMSentiment_nrc <- SFNM_Words %>%
+  inner_join(get_sentiments("nrc"))
+
+SFNMSentiment_bing <- SFNM_Words %>%
+  inner_join(get_sentiments("bing"))
+
+# Taking a look at the bing sentiment analysis, which just gives us a sense of the ratio between positive and negative words.
+cat("Bing Sentiment Analysis:")
+table(SFNMSentiment_bing$sentiment)
+# We can compare the ratios of positive to negative words in different regions.
+cat(paste("Positive Word to Negative Word Ratio:", 
+          as.character(round((337/394),digits = 2))))
+
+
+# The nrc sentiment analysis is more complex, and ranks words based on different characteristics beyond positive and negative.
+cat("NRC Sentiment Analysis")
+table(SFNMSentiment_nrc$sentiment)
+ggplot(SFNMSentiment_nrc, aes(x = sentiment)) + geom_bar()
+
+# Finally, we can look at the affin sentiment (which ranks how positive a word is on a scale of -5 to 5) and determine the frequency of more positive words.
+cat("Affin Sentiment Analysis")
+(ggplot(data = SFNMSentiment_affin, 
+       aes(x=value))+
+  geom_bar()+
+  ggtitle("The Santa Fe New Mexican Sentiment Range")+
+  theme_minimal())
+
+# Word Cloud
+set.seed(42)
+ggplot(SFNM_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_outside = TRUE) + scale_size(range = c(2,12)) + theme_minimal()
+```
+
+### Tampa Bay Times:
+```{r Southeast, echo = FALSE}
+
+
+# Loading in the data:
+TampaBayTimesClimate <- tibble(text = read_lines('Tampa Bay Times.txt'))
+
+# Seperating out the words into individual rows.
+TBT_Words <-  TampaBayTimesClimate %>% unnest_tokens(word, text)
+# removing any stop words.
+TBT_Words_SW <- TBT_Words %>% anti_join(stop_words)
+# After removing the stop words, we can see that the total word count has almost exactly halved.
+
+# Next, we count the frequency of each word in the corpus.
+TBT_Count <- TBT_Words_SW %>% count(word, sort=TRUE)
+
+
+# Sentiment Analysis
+TBTSentiment_affin <- TBT_Words %>%
+  inner_join(get_sentiments("afinn"))
+
+TBTSentiment_nrc <- TBT_Words %>%
+  inner_join(get_sentiments("nrc"))
+
+TBTSentiment_bing <- TBT_Words %>%
+  inner_join(get_sentiments("bing"))
+
+# Taking a look at the bing sentiment analysis, which just gives us a sense of the ratio between positive and negative words.
+cat("Bing Sentiment Analysis:")
+table(TBTSentiment_bing$sentiment)
+# We can compare the ratios of positive to negative words in different regions.
+cat(paste("Positive Word to Negative Word Ratio:", 
+          as.character(round((392/382),digits = 2))))
+# The positive to negative word ratio is higher in the Tampa Bay Times compared to the Santa Fe New Mexican, so the conversation surrounding climate change has a more positive sentiment in this region.
+
+# The nrc sentiment analysis ranks words based on different characteristics beyond positive and negative.
+cat("NRC Sentiment Analysis")
+ggplot(TBTSentiment_nrc, aes(x = sentiment)) + geom_bar()
+cat("Affin Sentiment Analysis")
+(ggplot(data = TBTSentiment_affin, 
+       aes(x=value))+
+  geom_bar()+
+  ggtitle("Tampa Bay Times Climate Sentiment Range")+
+  theme_minimal())
+
+# Word Cloud
+set.seed(42)
+ggplot(TBT_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_outside = TRUE) + scale_size(range = c(2,12)) + theme_minimal()
+
+```
+
+
+
+
+## Summarized Differences Between Climate Sentiment in Each Region:
 
 ```{r Comparison Plots}
 # Setting Up a Stacked Bar Chart
-Source <- c(rep("Boston" , 2) , rep("Chicago" , 2))
+Source <- c(rep("Boston" , 2) , rep("Chicago" , 2), rep("Tampa", 2), rep("New Mexico", 2))
 Sentiment <- c("Positive" , "Negative")
-Words <- c(3266,2114,1661,1577)
+Words <- c(3266,2114,1661,1577, 337,394, 392,382)
 Country <- data.frame(Source,Sentiment,Words)
 
 ggplot(Country, aes(fill=Sentiment, y=Words, x=Source)) + 
-    geom_bar(position="stack", stat="identity")
+  geom_bar(position="stack", stat="identity")
 
-TextSource <- c("Boston", "Chicago")
-PositiveWordRatio <- c(1.54,1.05)
+TextSource <- c("Boston", "Chicago", "Tampa", "New Mexico")
+PositiveWordRatio <- c(1.54,1.05, 1.03, 0.86 )
 BingRatios <- data.frame(TextSource,PositiveWordRatio)
 BingRatios
+
+(ggplot(data = BingRatios, aes(x = TextSource, y = PositiveWordRatio, fill = PositiveWordRatio)) + 
+  geom_bar(stat = "identity"))
 ```
+
+## TF-IDF:
