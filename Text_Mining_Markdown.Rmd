@@ -242,30 +242,6 @@ ggplot(TBT_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_
 
 ```
 
-
-
-
-## Summarized Differences Between Climate Sentiment in Each Region:
-
-```{r Comparison Plots}
-# Setting Up a Stacked Bar Chart
-Source <- c(rep("Boston" , 2) , rep("Chicago" , 2), rep("Tampa", 2), rep("New Mexico", 2))
-Sentiment <- c("Positive" , "Negative")
-Words <- c(3266,2114,1661,1577, 337,394, 392,382)
-Country <- data.frame(Source,Sentiment,Words)
-
-ggplot(Country, aes(fill=Sentiment, y=Words, x=Source)) + 
-  geom_bar(position="stack", stat="identity")
-
-TextSource <- c("Boston", "Chicago", "Tampa", "New Mexico")
-PositiveWordRatio <- c(1.54,1.05, 1.03, 0.86 )
-BingRatios <- data.frame(TextSource,PositiveWordRatio)
-BingRatios
-
-(ggplot(data = BingRatios, aes(x = TextSource, y = PositiveWordRatio, fill = PositiveWordRatio)) + 
-  geom_bar(stat = "identity"))
-```
-
 ### The Los Angeles Times:
 
 ```{r West, echo = FALSE}
@@ -368,6 +344,29 @@ ggplot(Seattle_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud
 
 ```
 
+
+## Summarized Differences Between Climate Sentiment in Each Region:
+
+```{r Comparison Plots}
+# Setting Up a Stacked Bar Chart
+Source <- c(rep("Boston" , 2) , rep("Chicago" , 2), rep("Tampa", 2), rep("New Mexico", 2), rep("Los Angeles", 2), rep("Seattle", 2))
+Sentiment <- c("Positive" , "Negative")
+Words <- c(3266,2114,1661,1577, 337,394, 392,382, 1082,763, 577,547)
+Country <- data.frame(Source,Sentiment,Words)
+
+ggplot(Country, aes(fill=Sentiment, y=Words, x=Source)) + 
+  geom_bar(position="stack", stat="identity")
+
+TextSource <- c("Boston", "Chicago", "Tampa", "New Mexico", "Los Angeles", "Seattle")
+PositiveWordRatio <- c(1.54,1.05, 1.03, 0.86, 1.42, 1.05)
+BingRatios <- data.frame(TextSource,PositiveWordRatio)
+BingRatios
+
+(ggplot(data = BingRatios, aes(x = TextSource, y = PositiveWordRatio, fill = PositiveWordRatio)) + 
+  geom_bar(stat = "identity"))
+```
+The positive word ratio is the highest in Boston and Los Angeles, over 1.4, whereas Chicago, Seattle, and Tampa have lower positive word ratios under 1.2, the lowest ratio under 1.0 for New Mexico. This tells us that the Northeast and Northwest regions are more positive when discussing climate change, possibly due to public acknowledgement of climate change and willingness to talk about positive ways to combat it through public policy. 
+
 ## TF-IDF:
 ```{r}
 # Transposing data alongside each other to compare vs on top of each other 
@@ -409,4 +408,8 @@ region_words <- region_words %>%
 #ratio of how often a term shows up in the whole corpus vs indiv doc
 
 ```
+Locations such as cities or state names, regional environmental features or residents affected by climate change such as ranchers or coral, and natural disasters such as hurricanes or drought have the highest tf-idf ratios, and are most important to their corpuses, or regional newspapers. This makes sense because each corpus or region is more concerned with their own residents and how climate change affects them.
 
+Pattern differences between regions include differing concerns unique to each region like above, with more coastal or farming issues arising to corresponding geographic regions. 
+
+## Policy Suggestions
