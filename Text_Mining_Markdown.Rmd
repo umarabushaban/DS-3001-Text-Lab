@@ -27,7 +27,7 @@ library(textdata)
 
 ## Introduction:
 
-### Our group is taking a look at six different regions in the continental United States: Northeast, Midwest ... Our goal is to analyze the sentiment surrounding climate change in those regions by using text mining algorithms on news sources in those regions. {.unlisted .unnumbered}
+### Our group is taking a look at six different regions in the continental United States: Northeast, Northwest, Midwest, West, Southwest, and Southeast. Our goal is to analyze the sentiment surrounding climate change in those regions by using text mining algorithms on popular regional news sources.. {.unlisted .unnumbered}
 
 ## Initial Exploration in Each Region: {.tabset}
 
@@ -345,6 +345,9 @@ ggplot(Seattle_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud
 ```
 
 
+
+
+
 ## Summarized Differences Between Climate Sentiment in Each Region:
 
 ```{r Comparison Plots}
@@ -368,48 +371,153 @@ BingRatios
 The positive word ratio is the highest in Boston and Los Angeles, over 1.4, whereas Chicago, Seattle, and Tampa have lower positive word ratios under 1.2, the lowest ratio under 1.0 for New Mexico. This tells us that the Northeast and Northwest regions are more positive when discussing climate change, possibly due to public acknowledgement of climate change and willingness to talk about positive ways to combat it through public policy. 
 
 ## TF-IDF:
+
+### Term frequencies were modified, the numbers presented are: {.unlisted .unnumbered}
+### ((Specific word count per region)/(total specific word count))/(words per region/25000){.unlisted .unnumbered}
+
 ```{r}
-# Transposing data alongside each other to compare vs on top of each other 
-data_prep <- function(x,y,z){
-  i <- as_tibble(t(x))
-  ii <- unite(i,"text",y:z,remove = TRUE,sep = " ")}
-BM_bag <- data_prep(BM_Words, 'V1', 'V107371') # 51873
-CH_bag <- data_prep(CH_Words, 'V1','V68923')
-TBT_bag <- data_prep(TBT_Words, 'V1','V18946')
-SFNM_bag <- data_prep(SFNM_Words, 'V1', 'V14141')
-LA_bag <- data_prep(LA_Words, 'V1', 'V35993')
-Seattle_bag <- data_prep(Seattle_Words, 'V1', 'V12650')
-
-regions <- c("Northeast","Midwest","Southwest", "Southeast", "West", "Northwest")
-
-tf_idf_text <- tibble(regions,text=t(tibble(BM_bag,CH_bag, TBT_bag, SFNM_bag,.name_repair = "universal")))
-
-View(tf_idf_text)
-
-word_count <- tf_idf_text %>%
-  unnest_tokens(word, text) %>%
-  count(regions, word, sort = TRUE)
-
-total_words <- word_count %>% 
-  group_by(regions) %>% 
-  summarize(total = sum(n))
-
-region_words <- left_join(word_count, total_words)
-
-View(region_words)
-
-region_words <- region_words %>%
-  bind_tf_idf(word, regions, n)
-
-#usually look at the top 25ish words and see if there are pattern differences
-
-# term frequency - inverse document frequency tf-idf. Here we are going to treat each of our speeches as a document in a corpus and explore the relative importance of words to these speeches as compared to the overall corpus. 
-
-#ratio of how often a term shows up in the whole corpus vs indiv doc
+# # Transposing data alongside each other to compare vs on top of each other 
+# data_prep <- function(x,y,z){
+#   i <- as_tibble(t(x))
+#   ii <- unite(i,"text",y:z,remove = TRUE,sep = " ")}
+# 
+# BM_bag <- data_prep(BM_Words, 'V1', 'V107371') # 51873
+# CH_bag <- data_prep(CH_Words, 'V1','V68923')
+# TBT_bag <- data_prep(TBT_Words, 'V1','V18946')
+# SFNM_bag <- data_prep(SFNM_Words, 'V1', 'V14141')
+# LA_bag <- data_prep(LA_Words, 'V1', 'V35993')
+# Seattle_bag <- data_prep(Seattle_Words, 'V1', 'V12650')
+# 
+# regions <- c("Northeast","Midwest","Southwest", "Southeast", "West", "Northwest")
+# 
+# tf_idf_text <- tibble(regions,text=t(tibble(BM_bag,CH_bag, TBT_bag, SFNM_bag,.name_repair = "universal")))
+# 
+# View(tf_idf_text)
+# 
+# word_count <- tf_idf_text %>%
+#   unnest_tokens(word, text) %>%
+#   count(regions, word, sort = TRUE)
+# 
+# total_words <- word_count %>% 
+#   group_by(regions) %>% 
+#   summarize(total = sum(n))
+# 
+# region_words <- left_join(word_count, total_words)
+# 
+# View(region_words)
+# 
+# region_words <- region_words %>%
+#   bind_tf_idf(word, regions, n)
+# 
+# #usually look at the top 25ish words and see if there are pattern differences
+# 
+# # term frequency - inverse document frequency tf-idf. Here we are going to treat each of our speeches as a document in a corpus and explore the relative importance of words to these speeches as compared to the overall corpus. 
+# 
+# #ratio of how often a term shows up in the whole corpus vs indiv doc
 
 ```
+
+```{r}
+BM_Merge <- BM_Count %>% rename(Boston = n)
+CH_Merge <- CH_Count %>% rename(Chicago = n)
+LA_Merge <- LA_Count %>% rename(LA = n)
+SE_Merge <- Seattle_Count %>% rename(Seattle = n)
+TBT_Merge <- TBT_Count %>% rename(Tampa_Bay = n)
+SFNM_Merge <- SFNM_Count %>% rename(Santa_Fe = n)
+
+TFTable <- merge(merge(merge(merge(merge(BM_Merge,
+                                      CH_Merge, by = 'word'),
+                                SFNM_Merge, by = 'word'),
+                          TBT_Merge, by = 'word'),
+                    LA_Merge, by = 'word'),
+              SE_Merge, by = 'word')
+
+TFTable$Total <- rowSums(TFTable[2:6])
+
+TFTable <- TFTable[order(TFTable$Total, decreasing = TRUE),]
+TFRelavent <- head(TFTable, 25)
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+lengths <- c(length(BM_Words_SW$word),
+             length(CH_Words_SW$word),
+             length(SFNM_Words_SW$word), 
+             length(TBT_Words_SW$word), 
+             length(LA_Words_SW$word), 
+             length(Seattle_Words_SW$word))
+
+per2500 <- lengths/25000
+
+for (i in 1:6){
+  TFRelavent[,i+1] <- TFRelavent[,i+1]/TFRelavent$Total
+}
+
+TFScaled <- TFRelavent
+
+for (i in 1:6){
+  TFScaled[,i+1] <- TFRelavent[,i+1]/per2500[i]
+}
+
+
+TFScaled <- TFScaled[,1:7]
+TFScaledInv = data.frame(t(TFScaled))
+names(TFScaledInv) <- lapply(TFScaledInv[1, ], as.character)
+TFScaledInv <- TFScaledInv[-1,] 
+
+print(TFScaledInv)
+
+TFScaledInv$City <- c("Boston", "Chicago", "Santa Fe", "Tampa Bay", "Los Angeles", "Seattle")
+
+```
+
+### Looking at a few specific words in more depth:{.unlisted .unnumbered}
+
+```{r}
+
+ggplot(data = TFScaledInv, aes(x = City, y = water, fill = water)) +
+  geom_bar(stat = "identity") + 
+  scale_fill_brewer(palette="Blues") + 
+  theme_minimal()
+
+ggplot(data = TFScaledInv, aes(x = City, y = heat, fill = heat)) +
+  geom_bar(stat = "identity") + 
+  scale_fill_brewer(palette="Oranges") + 
+  theme_minimal()
+
+ggplot(data = TFScaledInv, aes(x = City, y = energy, fill = energy)) +
+  geom_bar(stat = "identity") + 
+  scale_fill_brewer(palette="Greens") + 
+  theme_minimal()
+
+ggplot(data = TFScaledInv, aes(x = City, y = power, fill = power)) +
+  geom_bar(stat = "identity") + 
+  scale_fill_brewer(palette="Purples") + 
+  theme_minimal()
+
+ggplot(data = TFScaledInv, aes(x = City, y = air, fill = air)) +
+  geom_bar(stat = "identity") + 
+  scale_fill_brewer(palette="Greys") + 
+  theme_minimal()
+
+ggplot(data = TFScaledInv, aes(x = City, y = world, fill = world)) +
+  geom_bar(stat = "identity") + 
+  scale_fill_brewer(palette="Reds") + 
+  theme_minimal()
+
+ggplot(data = TFScaledInv, aes(x = City, y = president, fill = president)) +
+  geom_bar(stat = "identity") + 
+  scale_fill_brewer(palette="Spectral") + 
+  theme_minimal()
+
+
+```
+
 Locations such as cities or state names, regional environmental features or residents affected by climate change such as ranchers or coral, and natural disasters such as hurricanes or drought have the highest tf-idf ratios, and are most important to their corpuses, or regional newspapers. This makes sense because each corpus or region is more concerned with their own residents and how climate change affects them.
 
 Pattern differences between regions include differing concerns unique to each region like above, with more coastal or farming issues arising to corresponding geographic regions. 
 
+Looking at the relative ratios between each region and the US as a whole, we see some interesting but expected results that depend on specific words.
+
 ## Policy Suggestions
+
+### We don't get a ton of information from this project that would influence policy suggestions, but generally policies that we think would help reduce the effects of global warming are...{.unlisted .unnumbered}
