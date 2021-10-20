@@ -1,5 +1,5 @@
 ---
-title: "An Analysis of Climate Sentiment Across the USA"
+title: "An Analysis of Climate Sentiment and Term Frequency Across the USA"
 author: "Xander Atalay, Zoe Pham, Umar Abushaban"
 date: "10/20/2021"
 output:
@@ -40,6 +40,7 @@ BostonMagazineClimate <- tibble(text = read_lines('BostonMagazineClimate.txt'))
 
 # Seperating out the words into individual rows.
 BM_Words <-  BostonMagazineClimate %>% unnest_tokens(word, text)
+cat(paste("Total Words: ", as.character(length(BM_Words$word))))
 # removing any stop words.
 BM_Words_SW <- BM_Words %>% anti_join(stop_words)
 # After removing the stop words, we can see that the total word count has halved.
@@ -96,6 +97,7 @@ ChicagoHeraldClimate <- tibble(text = read_lines('ChicagoHeraldClimate.txt'))
 
 # Seperating out the words into individual rows.
 CH_Words <-  ChicagoHeraldClimate %>% unnest_tokens(word, text)
+cat(paste("Total Words: ", as.character(length(CH_Words$word))))
 # removing any stop words.
 CH_Words_SW <- CH_Words %>% anti_join(stop_words)
 # After removing the stop words, we can see that the total word count has almost exactly halved.
@@ -150,6 +152,7 @@ SantaFeNewMexicanClimate <- tibble(text = read_lines('The Santa Fe New Mexican.t
 
 # Separate the words into individual rows.
 SFNM_Words <-  SantaFeNewMexicanClimate %>% unnest_tokens(word, text)
+cat(paste("Total Words: ", as.character(length(SFNM_Words$word))))
 # Removing any stop words.
 SFNM_Words_SW <- SFNM_Words %>% anti_join(stop_words)
 # Counting the frequency of each word in the corpus (entire body of Santa Fe New Mexican articles I selected)
@@ -200,6 +203,8 @@ TampaBayTimesClimate <- tibble(text = read_lines('Tampa Bay Times.txt'))
 
 # Seperating out the words into individual rows.
 TBT_Words <-  TampaBayTimesClimate %>% unnest_tokens(word, text)
+cat(paste("Total Words: ", as.character(length(TBT_Words$word))))
+
 # removing any stop words.
 TBT_Words_SW <- TBT_Words %>% anti_join(stop_words)
 # After removing the stop words, we can see that the total word count has almost exactly halved.
@@ -250,6 +255,8 @@ LATimesClimate <- tibble(text = read_lines('LA_Times_Climate.txt'))
 
 # Separate the words into individual rows.
 LA_Words <-  LATimesClimate %>% unnest_tokens(word, text)
+cat(paste("Total Words: ", as.character(length(LA_Words$word))))
+
 # Removing any stop words.
 LA_Words_SW <- LA_Words %>% anti_join(stop_words)
 # Counting the frequency of each word in the corpus (entire body of the LA Times articles in the .txt file)
@@ -291,7 +298,7 @@ set.seed(42)
 ggplot(LA_Count[1:50,], aes(label = word, size = n )) + geom_text_wordcloud(rm_outside = TRUE) + scale_size(range = c(2,12)) + theme_minimal()
 ```
 
-### The Seattle Times
+### The Seattle Times:
 ```{r Northwest, echo = FALSE}
 
 
@@ -302,6 +309,8 @@ SeattleTimesClimate <- tibble(text = read_lines('Seattle_Times_Climate.txt'))
 
 # Seperating out the words into individual rows.
 Seattle_Words <-  SeattleTimesClimate %>% unnest_tokens(word, text)
+cat(paste("Total Words: ", as.character(length(Seattle_Words$word))))
+
 # removing any stop words.
 Seattle_Words_SW <- Seattle_Words %>% anti_join(stop_words)
 # After removing the stop words, we can see that the total word count has almost exactly halved.
@@ -409,16 +418,13 @@ region_words <- region_words %>%
 
 region_words <- region_words[order(region_words$tf_idf, decreasing = TRUE),]
 
+region_words <- region_words[nchar(region_words$word) > 2, ]
+
 print.data.frame(head(region_words, 25))
-
-
-# term frequency - inverse document frequency tf-idf. Here we are going to treat each of our speeches as a document in a corpus and explore the relative importance of words to these speeches as compared to the overall corpus.
-
-#ratio of how often a term shows up in the whole corpus vs indiv doc
 
 ```
 
-
+#### We unsuprisingly see a lot of location-based terms appearing, such as town names.{.unlisted .unnumbered}
 
 ### To get a better sense of term frequency, we used the following statistic: {.unlisted .unnumbered}
 ### ((Specific word count per region)/(total specific word count))/(words per region/25000){.unlisted .unnumbered}
@@ -526,4 +532,6 @@ Looking at the relative ratios between each region and the US as a whole, we see
 
 ## Policy Suggestions
 
-### We don't get a ton of information from this project that would influence policy suggestions, but generally policies that we think would help reduce the effects of global warming are...{.unlisted .unnumbered}
+### We don't get a ton of information from this project that would influence policy suggestions, but one approach could be to gauge the specific climate-related needs of each region by looking at their sentiment and highest tf-idf terms. For example, the word "air" is used more in the LA articles than any other source, suggesting that air quality could be a bigger climate focus in that region.{.unlisted .unnumbered}
+
+
