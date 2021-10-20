@@ -363,8 +363,25 @@ div.tocify {
 </div>
 <div id="tf-idf" class="section level2">
 <h2>TF-IDF:</h2>
-<div id="term-frequencies-were-modified-the-numbers-presented-are" class="section level3 unlisted unnumbered">
-<h3 class="unlisted unnumbered">Term frequencies were modified, the numbers presented are:</h3>
+<div id="here-is-a-table-of-the-25-words-with-the-highest-tf_idf-values" class="section level3">
+<h3>Here is a table of the 25 words with the highest tf_idf values:</h3>
+<pre><code>## # A tibble: 25 × 7
+##    regions   word           n  total      tf   idf  tf_idf
+##    &lt;chr&gt;     &lt;chr&gt;      &lt;int&gt;  &lt;int&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+##  1 Southwest tampa         73  18946 0.00385 1.79  0.00690
+##  2 Northeast boston       401 107371 0.00373 1.79  0.00669
+##  3 Southeast fe            67  14141 0.00474 1.10  0.00521
+##  4 Southwest florida      125  18946 0.00660 0.693 0.00457
+##  5 Southeast 78            79  14141 0.00559 0.693 0.00387
+##  6 Southwest 78           103  18946 0.00544 0.693 0.00377
+##  7 Northeast barr         171 107371 0.00159 1.79  0.00285
+##  8 Southeast pi            21  14141 0.00149 1.79  0.00266
+##  9 Southwest blackmon      24  18946 0.00127 1.79  0.00227
+## 10 Southwest petersburg    24  18946 0.00127 1.79  0.00227
+## # … with 15 more rows</code></pre>
+</div>
+<div id="to-get-a-better-sense-of-term-frequency-we-used-the-following-statistic" class="section level3 unlisted unnumbered">
+<h3 class="unlisted unnumbered">To get a better sense of term frequency, we used the following statistic:</h3>
 </div>
 <div id="specific-word-count-per-regiontotal-specific-word-countwords-per-region25000" class="section level3 unlisted unnumbered">
 <h3 class="unlisted unnumbered">((Specific word count per region)/(total specific word count))/(words per region/25000)</h3>

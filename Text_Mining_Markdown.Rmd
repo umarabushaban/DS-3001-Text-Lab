@@ -27,7 +27,7 @@ library(textdata)
 
 ## Introduction:
 
-### Our group is taking a look at six different regions in the continental United States: Northeast, Northwest, Midwest, West, Southwest, and Southeast. Our goal is to analyze the sentiment surrounding climate change in those regions by using text mining algorithms on popular regional news sources.. {.unlisted .unnumbered}
+### Our group is taking a look at six different regions in the continental United States: Northeast, Northwest, Midwest, West, Southwest, and Southeast. Our goal is to analyze the sentiment surrounding climate change in those regions by using text mining algorithms on popular regional news sources. {.unlisted .unnumbered}
 
 ## Initial Exploration in Each Region: {.tabset}
 
@@ -372,50 +372,56 @@ The positive word ratio is the highest in Boston and Los Angeles, over 1.4, wher
 
 ## TF-IDF:
 
-### Term frequencies were modified, the numbers presented are: {.unlisted .unnumbered}
-### ((Specific word count per region)/(total specific word count))/(words per region/25000){.unlisted .unnumbered}
-
+### Here is a table of the 25 words with the highest tf_idf values:
 ```{r}
-# # Transposing data alongside each other to compare vs on top of each other 
-# data_prep <- function(x,y,z){
-#   i <- as_tibble(t(x))
-#   ii <- unite(i,"text",y:z,remove = TRUE,sep = " ")}
-# 
-# BM_bag <- data_prep(BM_Words, 'V1', 'V107371') # 51873
-# CH_bag <- data_prep(CH_Words, 'V1','V68923')
-# TBT_bag <- data_prep(TBT_Words, 'V1','V18946')
-# SFNM_bag <- data_prep(SFNM_Words, 'V1', 'V14141')
-# LA_bag <- data_prep(LA_Words, 'V1', 'V35993')
-# Seattle_bag <- data_prep(Seattle_Words, 'V1', 'V12650')
-# 
-# regions <- c("Northeast","Midwest","Southwest", "Southeast", "West", "Northwest")
-# 
-# tf_idf_text <- tibble(regions,text=t(tibble(BM_bag,CH_bag, TBT_bag, SFNM_bag,.name_repair = "universal")))
-# 
-# View(tf_idf_text)
-# 
-# word_count <- tf_idf_text %>%
-#   unnest_tokens(word, text) %>%
-#   count(regions, word, sort = TRUE)
-# 
-# total_words <- word_count %>% 
-#   group_by(regions) %>% 
-#   summarize(total = sum(n))
-# 
-# region_words <- left_join(word_count, total_words)
-# 
-# View(region_words)
-# 
-# region_words <- region_words %>%
-#   bind_tf_idf(word, regions, n)
-# 
-# #usually look at the top 25ish words and see if there are pattern differences
-# 
-# # term frequency - inverse document frequency tf-idf. Here we are going to treat each of our speeches as a document in a corpus and explore the relative importance of words to these speeches as compared to the overall corpus. 
-# 
-# #ratio of how often a term shows up in the whole corpus vs indiv doc
+# Transposing data alongside each other to compare vs on top of each other
+data_prep <- function(x,y,z){
+  i <- as_tibble(t(x))
+  ii <- unite(i,"text",y:z,remove = TRUE,sep = " ")}
+
+BM_bag <- data_prep(BostonMagazineClimate, 'V1', 'V3168') # 51873
+CH_bag <- data_prep(ChicagoHeraldClimate, 'V1','V2441')
+TBT_bag <- data_prep(TampaBayTimesClimate, 'V1','V1275')
+SFNM_bag <- data_prep(SantaFeNewMexicanClimate, 'V1', 'V987')
+LA_bag <- data_prep(LATimesClimate, 'V1', 'V1377')
+Seattle_bag <- data_prep(SeattleTimesClimate, 'V1', 'V1316')
+
+regions <- c("Northeast","Midwest","Southwest", "Southeast", "West", "Northwest")
+
+tf_idf_text <- tibble(regions,text=t(tibble(BM_bag,CH_bag, TBT_bag, SFNM_bag, LA_bag, Seattle_bag, .name_repair = "universal")))
+
+View(tf_idf_text)
+
+word_count <- tf_idf_text %>%
+  unnest_tokens(word, text) %>%
+  count(regions, word, sort = TRUE)
+
+total_words <- word_count %>%
+  group_by(regions) %>%
+  summarize(total = sum(n))
+
+region_words <- left_join(word_count, total_words)
+
+region_words <- region_words %>%
+  bind_tf_idf(word, regions, n)
+
+#usually look at the top 25ish words and see if there are pattern differences
+
+region_words <- region_words[order(region_words$tf_idf, decreasing = TRUE),]
+
+print.data.frame(head(region_words, 25))
+
+
+# term frequency - inverse document frequency tf-idf. Here we are going to treat each of our speeches as a document in a corpus and explore the relative importance of words to these speeches as compared to the overall corpus.
+
+#ratio of how often a term shows up in the whole corpus vs indiv doc
 
 ```
+
+
+
+### To get a better sense of term frequency, we used the following statistic: {.unlisted .unnumbered}
+### ((Specific word count per region)/(total specific word count))/(words per region/25000){.unlisted .unnumbered}
 
 ```{r}
 BM_Merge <- BM_Count %>% rename(Boston = n)
